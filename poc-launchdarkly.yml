@@ -1,0 +1,41 @@
+trigger:
+  branches:
+    include:
+    - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  buildConfiguration: 'Release'
+  scriptPath: './deploy.sh'
+
+stages:
+- stage: Build
+  displayName: 'Build Stage'
+  jobs:
+  - job: BuildJob
+    displayName: 'Compile and Prepare Artifacts'
+    steps:
+    - task: Bash@3
+      inputs:
+        targetType: 'inline'
+        script: |
+          echo "Starting build..."
+          chmod +x ${{ variables.scriptPath }}
+          echo "Build complete."
+
+- stage: Deploy
+  displayName: 'Deployment Stage'
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - job: DeployJob
+    displayName: 'Run Deployment Script'
+    steps:
+    - task: Bash@3
+      inputs:
+        targetType: 'inline'
+        script: |
+          echo "Running deployment..."
+          ${{ variables.scriptPath }}
